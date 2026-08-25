@@ -1,5 +1,5 @@
 """
-Applies config.FILTERS (max price, min beds, target areas) to a scraped
+Applies config.FILTERS (price range, min beds, target areas) to a scraped
 listing dict. Kept separate from scraping/storage so "what counts as a
 match" can change without touching how listings get collected.
 
@@ -51,9 +51,19 @@ def matches_location(address: str | None, filters: dict) -> bool:
 
 
 def matches_filters(listing: dict, filters: dict) -> bool:
-    max_price = filters.get("max_price")
+    # Whole-building listings quote a price/bed range across floor plans
+    # (e.g. Zumper's "Studio-2 beds, $3,960-$6,690") rather than one
+    # specific unit -- excluded outright when a scraper flags one, since
+    # the user only wants individual-property listings.
+    if filters.get("exclude_building_ranges", True) and listing.get("is_range"):
+        return False
+
     price = parse_price(listing.get("price"))
+    max_price = filters.get("max_price")
     if max_price is not None and price is not None and price > max_price:
+        return False
+    min_price = filters.get("min_price")
+    if min_price is not None and price is not None and price < min_price:
         return False
 
     min_beds = filters.get("min_beds")

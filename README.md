@@ -7,23 +7,28 @@ phone notification via ntfy for each new *matching* listing, and shows
 everything scraped (matches highlighted) in a small local dashboard.
 
 **Sites configured:** Anchor Realty, Chandler Properties, L&L Property
-Management, RNB Property Management, Zumper (San Francisco + Sausalito
-searches), Mosser Companies, RentSFNow, Trinity, Brick and Timber
-(`config.py`).
+Management, Progressive Property Group, RNB Property Management, Zumper
+(San Francisco + Sausalito searches), RentSFNow, Trinity, Brick and
+Timber (`config.py`). ("Mosser Companies" was listed here before but
+was never actually configured -- corrected.)
 
-**Default filters:** under $4,000/mo, 1+ bedroom, downtown San
-Francisco or Sausalito. Adjust `FILTERS` at the top of `config.py` —
-it's a plain dict (max_price, min_beds, zip codes / neighborhood
-keywords for "downtown SF", keywords for Sausalito).
+**Default filters:** $3,000-$4,000/mo, 1+ bedroom, downtown San
+Francisco or Sausalito, individual-unit listings only (excludes
+whole-building listings that quote a price/bed range across floor
+plans, e.g. Zumper's "$3,995-$7,495"). Adjust `FILTERS` at the top of
+`config.py` — it's a plain dict (min_price, max_price, min_beds, zip
+codes / neighborhood keywords for "downtown SF", keywords for
+Sausalito, exclude_building_ranges).
 
 ## Status of each scraper
 
 | Site | Status |
 |---|---|
-| **Anchor Realty, Chandler Properties, L&L Property Management** | ✅ Verified live against real pages. All three run on AppFolio (L&L's is embedded on their own domain rather than a `*.appfolio.com` subdomain, but the same scraper handles it) and key off AppFolio's stable `/listings/detail/<uuid>` links. |
+| **Anchor Realty, Chandler Properties, L&L Property Management, Progressive Property Group** | ✅ Verified live against real pages. All four run on AppFolio (L&L's and Progressive's are embedded on their own domain rather than a `*.appfolio.com` subdomain, but the same scraper handles it) and key off AppFolio's stable `/listings/detail/<uuid>` links. |
 | **RNB Property Management** | ✅ Verified live — real CSS selectors (`.rnb-prop`, etc.), not guesses. Inventory currently skews Sacramento-area rather than SF/Sausalito, but kept in rotation. |
-| **Zumper - San Francisco / Zumper - Sausalito** | ✅ Verified live. A large aggregator, not a small brokerage — included at the user's request despite more anti-bot/ToS risk than the other sites. Anchors on stable URL patterns (`/apartment-buildings/...`), not CSS classes, since Zumper's class names are build-hashed and change on every deploy. If it ever returns 0 listings, check `data/debug_zumper*.html` for a block/CAPTCHA page before assuming the markup changed. |
-| **Mosser, RentSFNow, Trinity, Brick and Timber** | ⚠️ Selectors in `config.py` are still best-guess placeholders (marked `# ADJUST ME`) from before this project had live internet access to verify against. Run the inspector and fix the CSS selectors — see below. Takes ~5 min per site. |
+| **Brick and Timber** | ✅ Verified live against `/browse-apartments/` (real CSS selectors, not guesses). Their neighborhood tag ("Downtown", "Tenderloin", etc.) is what the downtown-SF filter matches on for this site, since it doesn't expose a zip code. |
+| **Zumper - San Francisco / Zumper - Sausalito** | ✅ Verified live. A large aggregator, not a small brokerage — included at the user's request despite more anti-bot/ToS risk than the other sites. Anchors on stable URL patterns (`/apartment-buildings/...`), not CSS classes, since Zumper's class names are build-hashed and change on every deploy. Also the only site so far that shows whole-building floor-plan ranges, which `is_range` detection excludes. If it ever returns 0 listings, check `data/debug_zumper*.html` for a block/CAPTCHA page before assuming the markup changed. |
+| **RentSFNow, Trinity** | ⚠️ Selectors in `config.py` are still best-guess placeholders (marked `# ADJUST ME`) from before this project had live internet access to verify against. Run the inspector and fix the CSS selectors — see below. Takes ~5 min per site. |
 
 If any of the ⚠️ sites turn out to run on AppFolio too (worth checking
 — it's common), just switch that site's `"engine"` to `"appfolio"` in

@@ -18,8 +18,13 @@ rendered HTML to data/ so you can find the right selectors quickly.
 # keyword list for sites (like Zumper) whose listing URLs/text name the
 # neighborhood directly. Adjust freely if it's too wide/narrow.
 FILTERS = {
+    "min_price": 3000,
     "max_price": 4000,
     "min_beds": 1,
+    # Excludes whole-building listings quoting a price/bed range across
+    # floor plans (currently only Zumper does this) -- only individual
+    # single-unit listings should trigger a notification.
+    "exclude_building_ranges": True,
     "downtown_sf_zips": {"94102", "94103", "94104", "94105", "94108", "94111"},
     "downtown_sf_keywords": [
         "financial district", "soma", "south beach", "union square",
@@ -85,6 +90,14 @@ SITES = [
         "name": "L&L Property Management",
         "engine": "appfolio",
         "url": "https://www.llpm.com/vacancies",
+    },
+    {
+        # Verified 2026-08-25: same AppFolio Websites setup as L&L. 0
+        # live listings at check time, but real infrastructure -- also
+        # covers Tiburon (near Sausalito) per their own site title.
+        "name": "Progressive Property Group",
+        "engine": "appfolio",
+        "url": "https://www.progressivesf.com/availability",
     },
     {
         # Verified 2026-08-25 against live search-rentals.php. Real
