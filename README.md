@@ -1,15 +1,15 @@
 # SF Rental Tracker
 
-Scrapes 10 SF/Sausalito-area rental sites, filters for what actually
+Scrapes 11 SF/Sausalito-area rental sites, filters for what actually
 matches your search (price, beds, neighborhood — see `FILTERS` in
 `config.py`), tracks what's new in a local SQLite database, pushes a
 phone notification via ntfy for each new *matching* listing, and shows
 everything scraped (matches highlighted) in a small local dashboard.
 
 **Sites configured:** Anchor Realty, Chandler Properties, L&L Property
-Management, Progressive Property Group, RNB Property Management, Zumper
-(San Francisco + Sausalito searches), RentSFNow, Trinity, Brick and
-Timber (`config.py`). ("Mosser Companies" was listed here before but
+Management, Progressive Property Group, RNB Property Management, ReLISTO,
+Zumper (San Francisco + Sausalito searches), RentSFNow, Trinity, Brick
+and Timber (`config.py`). ("Mosser Companies" was listed here before but
 was never actually configured -- corrected.)
 
 **Default filters:** $3,000-$4,000/mo, 1+ bedroom, downtown San
@@ -27,6 +27,7 @@ Sausalito, exclude_building_ranges).
 | **Anchor Realty, Chandler Properties, L&L Property Management, Progressive Property Group** | ✅ Verified live against real pages. All four run on AppFolio (L&L's and Progressive's are embedded on their own domain rather than a `*.appfolio.com` subdomain, but the same scraper handles it) and key off AppFolio's stable `/listings/detail/<uuid>` links. |
 | **RNB Property Management** | ✅ Verified live — real CSS selectors (`.rnb-prop`, etc.), not guesses. Inventory currently skews Sacramento-area rather than SF/Sausalito, but kept in rotation. |
 | **Brick and Timber** | ✅ Verified live against `/browse-apartments/` (real CSS selectors, not guesses). Their neighborhood tag ("Downtown", "Tenderloin", etc.) is what the downtown-SF filter matches on for this site, since it doesn't expose a zip code. |
+| **ReLISTO** | ✅ Verified live — 10 real active listings at check time (the only site checked that had current inventory, rather than working-but-empty infrastructure). Cards expose price/beds/baths as HTML data-attributes, more reliable than text parsing. Skews luxury-priced, so may rarely produce a match within the $3-4k range, but kept for when it does. |
 | **Zumper - San Francisco / Zumper - Sausalito** | ✅ Verified live. A large aggregator, not a small brokerage — included at the user's request despite more anti-bot/ToS risk than the other sites. Anchors on stable URL patterns (`/apartment-buildings/...`), not CSS classes, since Zumper's class names are build-hashed and change on every deploy. Also the only site so far that shows whole-building floor-plan ranges, which `is_range` detection excludes. If it ever returns 0 listings, check `data/debug_zumper*.html` for a block/CAPTCHA page before assuming the markup changed. |
 | **RentSFNow, Trinity** | ⚠️ Selectors in `config.py` are still best-guess placeholders (marked `# ADJUST ME`) from before this project had live internet access to verify against. Run the inspector and fix the CSS selectors — see below. Takes ~5 min per site. |
 
