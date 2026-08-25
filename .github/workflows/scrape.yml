@@ -1,0 +1,61 @@
+name: Scrape rental listings
+
+on:
+  schedule:
+    # Every 2 hours. Chosen to comfortably fit the 2,000 free Actions
+    # minutes/month private repos get -- each run needs a headless
+    # browser against ~9 sites, so runs aren't free. See README.
+    - cron: "0 */2 * * *"
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # Caches the downloaded Chromium binary so most runs skip the
+      # ~100MB download. Keyed on the OS + playwright's pinned version
+      # in requirements.txt, so it invalidates itself on a version bump.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - run: playwright install --with-deps chromium
+
+      # data/listings.db is what makes "new listing" detection work --
+      # without restoring it, every run would think every listing is
+      # brand new and re-notify for all of them. Runners are ephemeral,
+      # so this has to round-trip through cache each run. A static key
+      # would only ever save once (actions/cache skips saving over an
+      # existing key), so restore uses a prefix match to grab the most
+      # recent save, and the save step below always writes a fresh
+      # uniquely-keyed entry.
+      - name: Restore listings database
+        uses: actions/cache/restore@v4
+        with:
+          path: data/listings.db
+          key: listings-db-${{ github.run_id }}
+          restore-keys: |
+            listings-db-
+
+      - name: Run scrapers
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python main.py
+
+      - name: Save listings database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/listings.db
+          key: listings-db-${{ github.run_id }}
