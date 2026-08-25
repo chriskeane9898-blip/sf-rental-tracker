@@ -61,14 +61,21 @@ SITES = [
         "wait_selector": ".unit-card",
     },
     {
+        # Verified 2026-08-25 against live /browse-apartments/ page (100
+        # units at time of check). Their neighborhood tag (e.g.
+        # "Downtown", "Tenderloin", or "Berkeley" for out-of-SF units)
+        # goes through city_selector so it lands in `address` and the
+        # existing "downtown" keyword in FILTERS catches it directly --
+        # this site doesn't expose a zip code to match on instead.
         "name": "Brick and Timber",
         "engine": "generic",
-        "url": "https://rentbt.com/",
-        "listing_selector": ".unit",                      # ADJUST ME
-        "address_selector": ".unit__address",             # ADJUST ME
-        "price_selector": ".unit__price",                  # ADJUST ME
-        "link_selector": "a",
-        "wait_selector": "body",
+        "url": "https://rentbt.com/browse-apartments/",
+        "listing_selector": "a.resi-bt-unit-card__link",
+        "address_selector": ".resi-bt-unit-card__subtitle-address",
+        "city_selector": ".resi-bt-unit-card__title-link",   # neighborhood tag
+        "beds_selector": ".spec-item",  # first match = beds (bed icon comes before bath)
+        "price_selector": ".uk-label-danger",
+        "wait_selector": "a.resi-bt-unit-card__link",
     },
     {
         # Verified 2026-08-25: AppFolio Websites product -- the whole

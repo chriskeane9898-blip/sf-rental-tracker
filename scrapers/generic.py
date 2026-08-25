@@ -28,13 +28,13 @@ def scrape(site_config: dict) -> list[dict]:
     for card in cards:
         addr_el = card.select_one(site_config["address_selector"])
         price_el = card.select_one(site_config["price_selector"])
-        link_el = card.select_one(site_config["link_selector"])
 
         street = addr_el.get_text(strip=True) if addr_el else None
 
-        # Some sites split street address and city/zip into separate
-        # elements (e.g. RNB Property Management) -- city_selector is
-        # optional and gets appended if present.
+        # Some sites split street address and city/zip (or a neighborhood
+        # tag, e.g. Brick and Timber's "Downtown"/"Tenderloin" label) into
+        # a separate element -- city_selector is optional and gets
+        # appended if present.
         city_selector = site_config.get("city_selector")
         city = None
         if city_selector:
@@ -42,8 +42,29 @@ def scrape(site_config: dict) -> list[dict]:
             city = city_el.get_text(strip=True) if city_el else None
 
         address = ", ".join(p for p in [street, city] if p) or None
+
+        # Optional: bedroom count, needed for the min_beds filter to
+        # actually exclude studios on sites that show beds (without
+        # this, beds stays None and the filter can't check it at all).
+        beds_selector = site_config.get("beds_selector")
+        beds = None
+        if beds_selector:
+            beds_el = card.select_one(beds_selector)
+            beds = beds_el.get_text(strip=True) if beds_el else None
+
         price = price_el.get_text(strip=True) if price_el else None
-        href = link_el.get("href") if link_el else None
+
+        # Usually the link is a child of the card (link_selector), but
+        # some sites make the whole card itself the <a> (e.g. Brick and
+        # Timber) -- fall back to the card's own href in that case.
+        link_selector = site_config.get("link_selector")
+        if link_selector:
+            link_el = card.select_one(link_selector)
+            href = link_el.get("href") if link_el else None
+        elif card.name == "a":
+            href = card.get("href")
+        else:
+            href = None
 
         if href and href.startswith("/"):
             base = site_config["url"].split("/")[0] + "//" + site_config["url"].split("/")[2]
@@ -53,11 +74,16 @@ def scrape(site_config: dict) -> list[dict]:
             continue  # skip cards we couldn't parse at all
 
         results.append({
-            "listing_id": make_listing_id(address, price),
+            # href included (not just address+price) because two
+            # different units can share both -- e.g. Brick and Timber
+            # listing multiple identically-priced studios in one
+            # building, which otherwise collide as "the same listing"
+            # and crash the DB's unique constraint.
+            "listing_id": make_listing_id(address, price, href),
             "address": address,
             "unit": None,
             "price": price,
-            "beds": None,
+            "beds": beds,
             "baths": None,
             "sqft": None,
             "url": href,
