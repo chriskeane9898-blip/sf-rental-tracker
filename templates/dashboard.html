@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SF Rental Tracker</title>
+<style>
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background:#f7f7f8; margin:0; padding:24px; color:#1a1a1a; }
+  h1 { font-size:22px; margin-bottom:4px; }
+  .sub { color:#666; margin-bottom:24px; font-size:14px; }
+  .site-block { margin-bottom:32px; }
+  .site-title { font-size:16px; font-weight:600; margin-bottom:10px; border-bottom:2px solid #222; padding-bottom:4px; }
+  .card { background:#fff; border:1px solid #e2e2e2; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .addr { font-weight:600; }
+  .meta { color:#666; font-size:13px; margin-top:2px; }
+  .price { font-weight:700; font-size:16px; white-space:nowrap; margin-left:16px; }
+  a.card-link { text-decoration:none; color:inherit; }
+  .empty { color:#999; font-style:italic; }
+</style>
+</head>
+<body>
+  <h1>SF Rental Tracker</h1>
+  <div class="sub">Currently active listings across tracked sites</div>
+
+  {% if not by_site %}
+    <p class="empty">No listings yet — run `python main.py` first.</p>
+  {% endif %}
+
+  {% for site, listings in by_site.items() %}
+    <div class="site-block">
+      <div class="site-title">{{ site }} ({{ listings|length }})</div>
+      {% for l in listings %}
+        <a class="card-link" href="{{ l['url'] or '#' }}" target="_blank">
+          <div class="card">
+            <div>
+              <div class="addr">{{ l['address'] }}{% if l['unit'] %} #{{ l['unit'] }}{% endif %}</div>
+              <div class="meta">
+                {% if l['beds'] %}{{ l['beds'] }}{% endif %}
+                {% if l['baths'] %} / {{ l['baths'] }} ba{% endif %}
+                {% if l['sqft'] %} · {{ l['sqft'] }} sqft{% endif %}
+                · first seen {{ l['first_seen'][:10] }}
+              </div>
+            </div>
+            <div class="price">{{ l['price'] or '' }}</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</body>
+</html>

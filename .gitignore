@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# generated at runtime
+data/listings.db
+data/debug_*.html
+data/run.log
+
+.env
