@@ -18,12 +18,13 @@ from config import SITES, FILTERS
 from storage import upsert_listings
 from notifier import notify_new_listings
 from filters import matches_filters
-from scrapers import appfolio, generic, zumper
+from scrapers import appfolio, generic, zumper, relisto
 
 ENGINES = {
     "appfolio": appfolio.scrape,
     "generic": generic.scrape,
     "zumper": zumper.scrape,
+    "relisto": relisto.scrape,
 }
 
 

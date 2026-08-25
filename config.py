@@ -127,4 +127,13 @@ SITES = [
         "engine": "zumper",
         "url": "https://www.zumper.com/apartments-for-rent/sausalito-ca?beds_min=1&price_max=4000",
     },
+    {
+        # Verified 2026-08-25: 10 live listings at check time (real
+        # inventory, not just working-but-empty infra like a couple of
+        # the AppFolio sites). Boutique SF leasing firm, individual
+        # units only (no floor-plan ranges seen).
+        "name": "ReLISTO",
+        "engine": "relisto",
+        "url": "https://www.relisto.com/rentals/",
+    },
 ]
