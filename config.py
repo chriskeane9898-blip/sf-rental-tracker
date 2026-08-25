@@ -128,6 +128,41 @@ SITES = [
         "url": "https://www.zumper.com/apartments-for-rent/sausalito-ca?beds_min=1&price_max=4000",
     },
     {
+        # Verified 2026-08-25. Craigslist's search UI redirects the old
+        # sfbay.craigslist.org URLs to this unified www.craigslist.org
+        # interface -- max_price/min_bedrooms filter server-side, postal
+        # + radius scope the geographic search (still double-checked
+        # locally via FILTERS since radius is approximate). Craigslist's
+        # ToS prohibits scraping -- included anyway at the user's
+        # explicit request for personal, non-commercial use.
+        #
+        # No dedicated scraper needed -- "generic" engine works directly
+        # since CL's listing cards use plain (non-hashed) class names
+        # and expose a real per-posting unique href.
+        "name": "Craigslist - Downtown SF",
+        "engine": "generic",
+        "url": "https://www.craigslist.org/search/city/san-francisco-ca?cat=apa&max_price=4000&min_bedrooms=1&postal=94102&radius=1.5",
+        "listing_selector": ".cl-search-result",
+        "address_selector": ".posting-title .label",   # CL doesn't expose a real street address publicly; title is the closest thing
+        "city_selector": ".result-location",            # neighborhood tag, e.g. "downtown / civic / van ness"
+        "beds_selector": ".post-bedrooms",
+        "price_selector": ".priceinfo",
+        "link_selector": ".posting-title",
+        "wait_selector": ".cl-search-result",
+    },
+    {
+        "name": "Craigslist - Sausalito",
+        "engine": "generic",
+        "url": "https://www.craigslist.org/search/city/sausalito-ca?cat=apa&max_price=4000&min_bedrooms=1&postal=94965&radius=3",
+        "listing_selector": ".cl-search-result",
+        "address_selector": ".posting-title .label",
+        "city_selector": ".result-location",
+        "beds_selector": ".post-bedrooms",
+        "price_selector": ".priceinfo",
+        "link_selector": ".posting-title",
+        "wait_selector": ".cl-search-result",
+    },
+    {
         # Verified 2026-08-25: 10 live listings at check time (real
         # inventory, not just working-but-empty infra like a couple of
         # the AppFolio sites). Boutique SF leasing firm, individual
