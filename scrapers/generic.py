@@ -30,7 +30,18 @@ def scrape(site_config: dict) -> list[dict]:
         price_el = card.select_one(site_config["price_selector"])
         link_el = card.select_one(site_config["link_selector"])
 
-        address = addr_el.get_text(strip=True) if addr_el else None
+        street = addr_el.get_text(strip=True) if addr_el else None
+
+        # Some sites split street address and city/zip into separate
+        # elements (e.g. RNB Property Management) -- city_selector is
+        # optional and gets appended if present.
+        city_selector = site_config.get("city_selector")
+        city = None
+        if city_selector:
+            city_el = card.select_one(city_selector)
+            city = city_el.get_text(strip=True) if city_el else None
+
+        address = ", ".join(p for p in [street, city] if p) or None
         price = price_el.get_text(strip=True) if price_el else None
         href = link_el.get("href") if link_el else None
 

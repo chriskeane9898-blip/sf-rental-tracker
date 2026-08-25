@@ -11,14 +11,19 @@ import argparse
 import sys
 import traceback
 
-from config import SITES
+from dotenv import load_dotenv
+load_dotenv()
+
+from config import SITES, FILTERS
 from storage import upsert_listings
 from notifier import notify_new_listings
-from scrapers import appfolio, generic
+from filters import matches_filters
+from scrapers import appfolio, generic, zumper
 
 ENGINES = {
     "appfolio": appfolio.scrape,
     "generic": generic.scrape,
+    "zumper": zumper.scrape,
 }
 
 
@@ -34,13 +39,23 @@ def run_site(site_config: dict):
         return
 
     print(f"[{name}] found {len(listings)} active listing(s)")
+
+    for l in listings:
+        l["matches_filters"] = matches_filters(l, FILTERS)
+
     new_listings = upsert_listings(name, listings)
-    if new_listings:
-        print(f"[{name}] {len(new_listings)} NEW listing(s):")
-        for l in new_listings:
+    matching_new = [l for l in new_listings if l["matches_filters"]]
+
+    if matching_new:
+        print(f"[{name}] {len(matching_new)} NEW listing(s) matching your filters:")
+        for l in matching_new:
             print(f"   - {l.get('address')} — {l.get('price')}")
-        notify_new_listings(name, new_listings)
-    else:
+        notify_new_listings(name, matching_new)
+
+    skipped = len(new_listings) - len(matching_new)
+    if skipped:
+        print(f"[{name}] {skipped} other new listing(s) didn't match your filters (no alert sent)")
+    if not new_listings:
         print(f"[{name}] nothing new")
 
 

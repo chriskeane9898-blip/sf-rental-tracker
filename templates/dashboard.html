@@ -15,6 +15,8 @@
   .price { font-weight:700; font-size:16px; white-space:nowrap; margin-left:16px; }
   a.card-link { text-decoration:none; color:inherit; }
   .empty { color:#999; font-style:italic; }
+  .card.match { border-color:#1a7f37; box-shadow: inset 3px 0 0 #1a7f37; }
+  .match-badge { display:inline-block; font-size:11px; font-weight:700; color:#1a7f37; margin-left:8px; }
 </style>
 </head>
 <body>
@@ -30,9 +32,9 @@
       <div class="site-title">{{ site }} ({{ listings|length }})</div>
       {% for l in listings %}
         <a class="card-link" href="{{ l['url'] or '#' }}" target="_blank">
-          <div class="card">
+          <div class="card{% if l['matches_filters'] %} match{% endif %}">
             <div>
-              <div class="addr">{{ l['address'] }}{% if l['unit'] %} #{{ l['unit'] }}{% endif %}</div>
+              <div class="addr">{{ l['address'] }}{% if l['unit'] %} #{{ l['unit'] }}{% endif %}{% if l['matches_filters'] %}<span class="match-badge">MATCH</span>{% endif %}</div>
               <div class="meta">
                 {% if l['beds'] %}{{ l['beds'] }}{% endif %}
                 {% if l['baths'] %} / {{ l['baths'] }} ba{% endif %}

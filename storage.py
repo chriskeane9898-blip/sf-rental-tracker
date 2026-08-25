@@ -26,12 +26,17 @@ CREATE TABLE IF NOT EXISTS listings (
     baths TEXT,
     sqft TEXT,
     url TEXT,
+    matches_filters INTEGER NOT NULL DEFAULT 0,
     first_seen TEXT NOT NULL,
     last_seen TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (site, listing_id)
 );
 """
+
+MIGRATIONS = [
+    "ALTER TABLE listings ADD COLUMN matches_filters INTEGER NOT NULL DEFAULT 0",
+]
 
 
 @contextmanager
@@ -41,6 +46,11 @@ def get_conn():
     conn.row_factory = sqlite3.Row
     try:
         conn.execute(SCHEMA)
+        for migration in MIGRATIONS:
+            try:
+                conn.execute(migration)
+            except sqlite3.OperationalError:
+                pass  # already applied
         yield conn
         conn.commit()
     finally:
@@ -71,20 +81,21 @@ def upsert_listings(site: str, listings: list[dict]) -> list[dict]:
                 conn.execute(
                     """INSERT INTO listings
                        (site, listing_id, address, unit, price, beds, baths, sqft, url,
-                        first_seen, last_seen, active)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
+                        matches_filters, first_seen, last_seen, active)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
                     (site, lid, item.get("address"), item.get("unit"), item.get("price"),
                      item.get("beds"), item.get("baths"), item.get("sqft"), item.get("url"),
-                     now, now),
+                     1 if item.get("matches_filters") else 0, now, now),
                 )
             else:
                 conn.execute(
                     """UPDATE listings SET last_seen = ?, active = 1,
-                       price = ?, address = ?, unit = ?, beds = ?, baths = ?, sqft = ?, url = ?
+                       price = ?, address = ?, unit = ?, beds = ?, baths = ?, sqft = ?, url = ?,
+                       matches_filters = ?
                        WHERE site = ? AND listing_id = ?""",
                     (now, item.get("price"), item.get("address"), item.get("unit"),
                      item.get("beds"), item.get("baths"), item.get("sqft"), item.get("url"),
-                     site, lid),
+                     1 if item.get("matches_filters") else 0, site, lid),
                 )
 
         # anything previously seen but not in this run -> mark inactive

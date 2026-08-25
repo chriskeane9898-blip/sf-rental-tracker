@@ -20,7 +20,12 @@ DETAIL_RE = re.compile(r"/listings/detail/([0-9a-fA-F-]{36})")
 PRICE_RE = re.compile(r"\$[\d,]+")
 BEDBATH_RE = re.compile(r"(Studio|\d+\s*bd)\s*/\s*[\d.]+\s*ba", re.IGNORECASE)
 SQFT_RE = re.compile(r"([\d,]+)\s*(?:sq ?ft|square feet)", re.IGNORECASE)
-ADDRESS_RE = re.compile(r"^(.*?,\s*CA\s*\d{5})")
+# AppFolio cards duplicate their price/bed/bath text (visible + a11y
+# copy) ahead of the actual address, all on one line if joined with a
+# plain space -- which made this greedily swallow that whole prefix.
+# Joining the card with "\n" and anchoring per-line (MULTILINE, and "."
+# not crossing lines) confines the match to just the address's own line.
+ADDRESS_RE = re.compile(r"^(\d.*?,\s*CA\s*\d{5})", re.MULTILINE)
 
 
 def scrape(site_config: dict) -> list[dict]:
@@ -50,7 +55,7 @@ def scrape(site_config: dict) -> list[dict]:
             if container.parent is None:
                 break
             container = container.parent
-            text = container.get_text(" ", strip=True)
+            text = container.get_text("\n", strip=True)
             if "$" in text and len(text) > 60:
                 break
 

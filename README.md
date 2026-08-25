@@ -1,27 +1,32 @@
 # SF Rental Tracker
 
-Scrapes 6 SF property-management sites, keeps track of what's new in a
-local SQLite database, pushes a phone notification for each new
-listing, and shows everything currently available in a small local
-dashboard.
+Scrapes 10 SF/Sausalito-area rental sites, filters for what actually
+matches your search (price, beds, neighborhood — see `FILTERS` in
+`config.py`), tracks what's new in a local SQLite database, pushes a
+phone notification via ntfy for each new *matching* listing, and shows
+everything scraped (matches highlighted) in a small local dashboard.
 
-**Sites configured:** Mosser Companies, Anchor Realty, Chandler
-Properties, RentSFNow, Trinity, Brick and Timber (`config.py`).
+**Sites configured:** Anchor Realty, Chandler Properties, L&L Property
+Management, RNB Property Management, Zumper (San Francisco + Sausalito
+searches), Mosser Companies, RentSFNow, Trinity, Brick and Timber
+(`config.py`).
 
-## Honest status of each scraper
+**Default filters:** under $4,000/mo, 1+ bedroom, downtown San
+Francisco or Sausalito. Adjust `FILTERS` at the top of `config.py` —
+it's a plain dict (max_price, min_beds, zip codes / neighborhood
+keywords for "downtown SF", keywords for Sausalito).
 
-I built and verified this structurally, but I could not run any of
-these scrapers against the live sites from where I built this (no
-general internet access in that environment) — so treat this as a
-strong first draft, not finished:
+## Status of each scraper
 
 | Site | Status |
 |---|---|
-| **Chandler Properties** | ✅ Verified against real page content — uses AppFolio, and the scraper keys off AppFolio's stable `/listings/detail/<uuid>` links, so it should work as-is. |
-| **Mosser, Anchor Realty, RentSFNow, Trinity, Brick and Timber** | ⚠️ Selectors in `config.py` are best-guess placeholders (marked `# ADJUST ME`). You'll need to run the inspector once per site and fix the CSS selectors — see below. Takes ~5 min per site. |
+| **Anchor Realty, Chandler Properties, L&L Property Management** | ✅ Verified live against real pages. All three run on AppFolio (L&L's is embedded on their own domain rather than a `*.appfolio.com` subdomain, but the same scraper handles it) and key off AppFolio's stable `/listings/detail/<uuid>` links. |
+| **RNB Property Management** | ✅ Verified live — real CSS selectors (`.rnb-prop`, etc.), not guesses. Inventory currently skews Sacramento-area rather than SF/Sausalito, but kept in rotation. |
+| **Zumper - San Francisco / Zumper - Sausalito** | ✅ Verified live. A large aggregator, not a small brokerage — included at the user's request despite more anti-bot/ToS risk than the other sites. Anchors on stable URL patterns (`/apartment-buildings/...`), not CSS classes, since Zumper's class names are build-hashed and change on every deploy. If it ever returns 0 listings, check `data/debug_zumper*.html` for a block/CAPTCHA page before assuming the markup changed. |
+| **Mosser, RentSFNow, Trinity, Brick and Timber** | ⚠️ Selectors in `config.py` are still best-guess placeholders (marked `# ADJUST ME`) from before this project had live internet access to verify against. Run the inspector and fix the CSS selectors — see below. Takes ~5 min per site. |
 
-If any of these turn out to run on AppFolio too (worth checking — it's
-very common), just switch that site's `"engine"` to `"appfolio"` in
+If any of the ⚠️ sites turn out to run on AppFolio too (worth checking
+— it's common), just switch that site's `"engine"` to `"appfolio"` in
 `config.py` and delete the selector lines — no new code needed.
 
 ## Setup
@@ -63,10 +68,15 @@ Uses [ntfy.sh](https://ntfy.sh):
 1. Install the **ntfy** app (iOS / Android).
 2. Pick a random, hard-to-guess topic name, e.g. `chris-sf-rentals-9f2k`.
 3. Subscribe to that topic in the app.
-4. Set it as an environment variable before running:
-   ```bash
-   export NTFY_TOPIC="chris-sf-rentals-9f2k"
+4. Create a `.env` file in the project root (already gitignored) with:
    ```
+   NTFY_TOPIC=chris-sf-rentals-9f2k
+   ```
+   `main.py` loads this automatically via `python-dotenv` — no need to
+   `export` it manually each run. For the GitHub Actions scheduled run,
+   set `NTFY_TOPIC` as a repo secret instead (Settings → Secrets and
+   variables → Actions) and pass it as an env var in the workflow file.
+
 Anyone who knows your topic name can see your notifications, so don't
 use something guessable. If you'd rather get actual SMS texts, there's
 a commented-out Twilio option in `notifier.py` (requires a paid Twilio
