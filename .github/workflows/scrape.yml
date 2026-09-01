@@ -1,18 +1,20 @@
 name: Scrape rental listings
 
 on:
-  schedule:
-    # Every 2 hours, at :17 rather than the top of the hour. GitHub's
-    # docs warn that scheduled workflows can be delayed OR silently
-    # dropped during high load, and specifically call out the top of
-    # every hour as the worst time -- that's when every repo's cron
-    # jobs collide. Confirmed in practice: the "0 */2 * * *" 00:00 UTC
-    # run never fired at all on 2026-08-25.
-    #
-    # Chosen to comfortably fit the 2,000 free Actions minutes/month
-    # private repos get -- each run needs a headless browser against
-    # ~11 sites, so runs aren't free. See README.
-    - cron: "17 */2 * * *"
+  # Scheduled runs are disabled for now. Re-enable by uncommenting the
+  # schedule block below.
+  # schedule:
+  #   # Every 2 hours, at :17 rather than the top of the hour. GitHub's
+  #   # docs warn that scheduled workflows can be delayed OR silently
+  #   # dropped during high load, and specifically call out the top of
+  #   # every hour as the worst time -- that's when every repo's cron
+  #   # jobs collide. Confirmed in practice: the "0 */2 * * *" 00:00 UTC
+  #   # run never fired at all on 2026-08-25.
+  #   #
+  #   # Chosen to comfortably fit the 2,000 free Actions minutes/month
+  #   # private repos get -- each run needs a headless browser against
+  #   # ~11 sites, so runs aren't free. See README.
+  #   - cron: "17 */2 * * *"
   workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
 
 jobs:
